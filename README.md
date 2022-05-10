@@ -14,3 +14,21 @@ Protocol Documentation:
 - [Dyn](https://help.dyn.com/remote-access-api/)
 - [Dynu](https://www.dynu.com/DynamicDNS/IP-Update-Protocol)
 - [Google](https://support.google.com/domains/answer/6147083?hl=en&ref_topic=9018335)
+
+---
+
+Installing
+----------
+
+**Client**:
+
+```sh
+bash <(wget -qO- https://github.com/MestreLion/ddnsp/raw/main/install-client.sh)
+```
+
+or, if cloning the full repository:
+
+```sh
+git clone 'https://github.com/MestreLion/ddnsp'
+ddnsp/install-client.sh
+```

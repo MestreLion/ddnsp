@@ -22,7 +22,7 @@ logfile=${XDG_CACHE_HOME:-"$HOME"/.cache}/ddnsp-client.log
 
 # Defaults for config file
 ip_provider='https://api.ipify.org'
-server='https://ddns.example.com'
+server='https://dyndns.example.com'
 username=${USER:-${LOGUSER:-$(whoami)}}
 password=''
 hostname=${HOSTNAME:-$(hostname)}
@@ -115,6 +115,7 @@ if ! [[ -r "$config" ]]; then
 		hostname=$(escape "$hostname")
 	EOF
 	chmod 600 -- "$config"
+	${EDITOR:-editor} -- "$config"
 fi
 
 # shellcheck source=$HOME/.config/ddnsp-client.conf
@@ -144,7 +145,7 @@ else
 fi
 
 if [[ "$action" ]]; then
-	response=$(safecurl "${headers[@]}" "${data[@]}" -- "$server" || echo "fail")
+	response=$(safecurl "${headers[@]}" "${data[@]}" -- "$server" || echo fail)
 	code=${response%% *}
 	new_ip=${response#* }
 	if [[ -z "$ip" ]] && [[ "$code" == 'good' ]] && [[ "$new_ip" ]]; then
