@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# This file is part of ddnsp - Personal self-hosting dynamic DNS
-# See <https://github.com/MestreLion/ddnsp>
+# This file is part of ddnsp, see <https://github.com/MestreLion/ddnsp>
 # Copyright (C) 2022 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
-# License: GPLv3 or later, at your choice. See <http://www.gnu.org/licenses/gpl>
+# License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
 # -----------------------------------------------------------------------------
 
 slug=ddnsp-client

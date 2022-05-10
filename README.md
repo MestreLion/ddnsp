@@ -1,5 +1,5 @@
-Personal self-hosting Dynamic DNS
-=================================
+`ddnsp` - Personal self-hosted Dynamic DNS
+===========================================
 
 Design
 ------
@@ -32,3 +32,24 @@ or, if cloning the full repository:
 git clone 'https://github.com/MestreLion/ddnsp'
 ddnsp/install-client.sh
 ```
+
+You may also use any third-party clients compatible with the `dyndns2` protocol:
+
+- [DDClient](https://ddclient.net/)
+
+`/etc/ddclient.conf`:
+```ini
+protocol=dyndns2
+ssl=yes
+use=web, web=https://api.ipify.org/
+server=YOUR_DDNS_SERVER[:PORT]
+login=YOUR_USERNAME
+password=YOUR_PASSWORD
+YOUR_HOSTNAME
+```
+In older versions you might also have to change `/etc/default/ddclient`:
+```ini
+run_daemon="true"
+```
+
+- [In-A-Dyn](https://troglobit.com/projects/inadyn/)
