@@ -6,11 +6,8 @@
 # Copyright (C) 2022 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
 # License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
 # -----------------------------------------------------------------------------
-# Scheduling:
-# crontab -e <<< '@hourly "$HOME"/.local/bin/dyndns-client'
-#------------------------------------------------------------------------------
 
-set -xEeuo pipefail  # exit on any error
+set -Eeuo pipefail  # exit on any error
 trap '>&2 echo "error: line $LINENO, status $?: $BASH_COMMAND"' ERR
 
 #------------------------------------------------------------------------------
@@ -26,9 +23,9 @@ logfile=${XDG_CACHE_HOME:-"$HOME"/.cache}/ddnsp-client.log
 # Defaults for config file
 ip_provider='https://api.ipify.org'
 server='https://ddns.example.com'
-username=$USER
+username=${USER:-${LOGUSER:-$(whoami)}}
 password=''
-hostname=$(hostname)
+hostname=${HOSTNAME:-$(hostname)}
 
 # State
 myname=${0##*/}
@@ -52,9 +49,9 @@ write_log() (
 )
 safecurl()  {
 	local opts=(
-		--silent
-		# --show-error
-		--get       # -G, Put the post data in the URL and use GET
+		--silent           # -s, Don't show progress meter or error messages
+		--show-error       # -S, With -s show an error message if it fails
+		--get              # -G, Put the post data in the URL and use GET
 		--location-trusted # follow redirects (-L) and re-send auth
 		--max-time 30
 		--connect-timeout 10
