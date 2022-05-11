@@ -80,6 +80,7 @@ usage() {
 
 	Options:
 	  -h|--help         - show this page.
+	  -f|--force        - Force IP update even if it did not change since last run.
 	  -c|--config FILE  - use FILE for configuration instead of the default:
 	                      ${config}
 
@@ -92,7 +93,7 @@ usage() {
 for arg in "$@"; do [[ "$arg" == "-h" || "$arg" == "--help" ]] && usage; done
 while (($#)); do
 	case "$1" in
-	-f | --force) shift; force=1;;
+	-f | --force) force=1;;
 	-c | --config) shift; config=${1:-};;
 	--config=*) config=${1#*=};;
 	-*) invalid "$1" ;;
@@ -123,8 +124,6 @@ source "$config"
 
 headers=(
 	--user "${username}:${password}"
-	# -H "Authorization: Bearer ${password}"
-	# -H 'Content-Type: application/json'
 )
 data=(--data-urlencode "hostname=$hostname")
 
