@@ -32,7 +32,7 @@ hostname=${HOSTNAME:-$(hostname)}
 # State
 ip=
 action=
-response=
+reply=
 
 #------------------------------------------------------------------------------
 
@@ -65,13 +65,13 @@ write_log() (
 	fi
 	local action=${1:-nochange}
 	local ip=${2:--}
-	local response=${3:-}
+	local reply=${3:-}
 	printf '%s\t%s\t%s' "$(timestamp)" "$action" "$ip"
-	if [[ "$response" ]]; then printf '\t%s' "$response"; fi
+	if [[ "$reply" ]]; then printf '\t%s' "$reply"; fi
 	printf '\n'
 )
 safecurl()  {
-	local stderr code=0
+	local stderr rc=0
 	local opts=(
 		--silent           # -s, Don't show progress meter or error messages
 		--show-error       # -S, With -s show an error message if it fails
@@ -80,16 +80,16 @@ safecurl()  {
 		--max-time 30
 		--connect-timeout 10
 	)
-	exec 3>&1; stderr=$(curl "${opts[@]}" "$@" 2>&1 >&3) || code=$?; exec 3>&-
+	exec 3>&1; stderr=$(curl "${opts[@]}" "$@" 2>&1 >&3) || rc=$?; exec 3>&-
 	# Work around OpenSSL 3 'unexpected eof while reading' error on old servers
-	if ((code)) && [[ "$stderr" ]]; then
+	if ((rc)) && [[ "$stderr" ]]; then
 		if [[ "$stderr" =~ ':0A000126:' ]]; then
-			code=0
+			rc=0
 		else
 			echo "$stderr" >&2
 		fi
 	fi
-	return "$code"
+	return $rc
 }
 
 #------------------------------------------------------------------------------
@@ -194,12 +194,15 @@ else
 fi
 
 if [[ "$action" ]]; then
-	response=$(safecurl "${headers[@]}" "${data[@]}" -- "$server_url" || echo fail)
-	code=${response%% *}
-	new_ip=${response#* }
-	if [[ -z "$ip" ]] && [[ "$code" == 'good' ]] && [[ "$new_ip" ]]; then
+	rc=0
+	reply=$(safecurl "${headers[@]}" "${data[@]}" -- "$server_url") || rc=$?
+	if ((rc)); then reply+="${reply:+ [}fail (${rc})${reply:+]}"; fi  #"
+	code=${reply%% *}
+	new_ip=${reply#* }; new_ip=${new_ip:-"$ip"}
+	# If successful, save the returned or known IP
+	if [[ "$code" == 'good' ]] && [[ "$new_ip" ]]; then
 		echo "$new_ip" > "$cache"
 	fi
 fi
 
-write_log "${action:-nochg}" "${ip:--}" "$response"
+write_log "${action:-nochg}" "${ip:--}" "$reply"
