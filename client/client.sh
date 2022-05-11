@@ -39,6 +39,25 @@ response=
 escape()    { printf '%q' "$@"; }
 read_ip()   { cat -- "$cache" 2>/dev/null || true; }
 timestamp() { date --rfc-3339=seconds; }
+exists()    { type "$@" >/dev/null 2>&1; }
+require()   {
+	local cmd=$1
+	local pkg=${2:-$cmd}
+	local msg='' eol=''
+	if exists "$cmd"; then return; fi
+	if [[ -x /usr/lib/command-not-found ]]; then
+		/usr/lib/command-not-found -- "$cmd" || true
+		eol='\n'
+	else
+		echo "Required command '${cmd}' is not installed." >&2
+		if [[ "$pkg" != '-' ]]; then
+			msg="with:\n\tsudo apt install ${pkg}\n"
+		fi
+	fi
+	echo -e "Please install ${cmd} ${msg}and try again.${eol}" >&2
+	exit 1
+}
+
 write_log() (
 	exec >> "$logfile"
 	local action=${1:-nochange}
@@ -128,6 +147,10 @@ if ((setup)); then
 	echo "$config"
 	exit
 fi
+
+#------------------------------------------------------------------------------
+
+require curl
 
 # shellcheck source=$HOME/.config/ddnsp-client.conf
 source "$config"
