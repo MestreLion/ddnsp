@@ -174,6 +174,7 @@ source "$config"
 
 headers=(
 	--user "${username}:${password}"
+	-H 'Connection: close'
 )
 data=(--data-urlencode "hostname=$hostname")
 
