@@ -146,7 +146,8 @@ if ! [[ -r "$config" ]]; then
 		hostname=$(escape "$hostname")
 	EOF
 	chmod 600 -- "$config"
-	echo "A blank configuration file was created, please edit it and try again" >&2
+	echo "A blank configuration file was created," \
+		"please edit it before using ${myself}" >&2
 	setup=1
 fi
 if ((setup)); then
