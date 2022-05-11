@@ -18,6 +18,7 @@ setup=0
 config=${XDG_CONFIG_HOME:-"$HOME"/.config}/ddnsp-client.conf
 
 # Constants
+myself=${0##*/}
 cache=${XDG_CACHE_HOME:-"$HOME"/.cache}/ddnsp-client.lastip.txt
 logfile=${XDG_CACHE_HOME:-"$HOME"/.cache}/ddnsp-client.log
 
@@ -29,7 +30,6 @@ password=PASSWORD
 hostname=${HOSTNAME:-$(hostname)}
 
 # State
-myname=${0##*/}
 ip=
 action=
 response=
@@ -62,16 +62,16 @@ safecurl()  {
 
 #------------------------------------------------------------------------------
 
-argerr()  { printf '%s: %s\n' "$myname" "${1:-error}" >&2; usage 1; }
+argerr()  { printf '%s: %s\n' "$myself" "${1:-error}" >&2; usage 1; }
 invalid() { argerr "invalid ${2:-option}: ${1:-}"; }
 usage() {
 	if [[ "${1:-}" ]]; then exec >&2; fi
 	cat <<-USAGE
-		Usage: $myname [options]
+		Usage: $myself [options]
 	USAGE
 	if [[ "${1:-}" ]]; then
 		cat <<-USAGE
-			Try '$myname --help' for more information.
+			Try '$myself --help' for more information.
 		USAGE
 		exit 1
 	fi
