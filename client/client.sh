@@ -59,7 +59,10 @@ require()   {
 }
 
 write_log() (
-	exec >> "$logfile"
+	if [[ "${logfile:-}" ]]; then
+		mkdir -p -- "$(dirname "$logfile")"
+		exec >> "$logfile"
+	fi
 	local action=${1:-nochange}
 	local ip=${2:--}
 	local response=${3:-}
@@ -99,11 +102,13 @@ usage() {
 	Personal DDNS Client
 
 	Options:
-	  -h|--help         - show this page.
+	  -h|--help         - Show this page.
 	  -f|--force        - Force IP update even if it did not change since last run.
 	  -S|--setup        - Create the config file if missing, print its path, and exit.
-	  -c|--config FILE  - use FILE for configuration instead of the default:
-	                      ${config}
+	  -c|--config FILE  - Use FILE for configuration instead of the default location
+	                          ${config}
+	  -L|--no-log       - Output to stdout instead of the default log file at
+	                          ${logfile}
 
 	Copyright (C) 2022 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
 	License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
@@ -116,6 +121,7 @@ while (($#)); do
 	case "$1" in
 	-f | --force) force=1;;
 	-S | --setup) setup=1;;
+	-L | --no-log) logfile="";;
 	-c | --config) shift; config=${1:-};;
 	--config=*) config=${1#*=};;
 	-*) invalid "$1" ;;
@@ -128,7 +134,7 @@ done
 
 if ! [[ -r "$config" ]]; then
 	# shellcheck disable=SC2174
-	mkdir -p -m 700 -- "${config%/*}"
+	mkdir -p -m 700 -- "$(dirname "$config")"
 	cat >>"$config" <<-EOF
 		# Personal DDNS client config file
 		# See https://github.com/MestreLion/ddnsp
