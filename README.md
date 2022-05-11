@@ -53,3 +53,18 @@ run_daemon="true"
 ```
 
 - [In-A-Dyn](https://troglobit.com/projects/inadyn/)
+
+`/etc/inadyn.conf`:
+```ini
+custom ddnsp {
+        ddns-server = YOUR_DDNS_SERVER[:PORT]
+        ddns-path   = "/nic/update?hostname=%h&myip=%i"
+        username    = YOUR_USERNAME
+        password    = YOUR_PASSWORD
+        hostname    = YOUR_HOSTNAME
+}
+```
+In Debian/Ubuntu, also change `/etc/default/inadyn` to enable the daemon:
+```ini
+RUN_DAEMON="yes"
+```
