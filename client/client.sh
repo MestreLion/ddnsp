@@ -83,8 +83,7 @@ safecurl()  {
 	exec 3>&1; stderr=$(curl "${opts[@]}" "$@" 2>&1 >&3) || code=$?; exec 3>&-
 	# Work around OpenSSL 3 'unexpected eof while reading' error on old servers
 	if ((code)) && [[ "$stderr" ]]; then
-		# shellcheck disable=SC2076
-		if [[ ':0A000126:' =~ "$stderr" ]]; then
+		if [[ "$stderr" =~ ':0A000126:' ]]; then
 			code=0
 		else
 			echo "$stderr" >&2
