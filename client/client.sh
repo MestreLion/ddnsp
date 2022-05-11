@@ -196,9 +196,10 @@ fi
 if [[ "$action" ]]; then
 	rc=0
 	reply=$(safecurl "${headers[@]}" "${data[@]}" -- "$server_url") || rc=$?
+	read -r code new_ip <<< "$reply"
+	new_ip=${new_ip:-$ip}
+	# If failed, append exit code to reply
 	if ((rc)); then reply+="${reply:+ [}fail (${rc})${reply:+]}"; fi  #"
-	code=${reply%% *}
-	new_ip=${reply#* }; new_ip=${new_ip:-"$ip"}
 	# If successful, save the returned or known IP
 	if [[ "$code" == 'good' ]] && [[ "$new_ip" ]]; then
 		echo "$new_ip" > "$cache"
