@@ -43,8 +43,9 @@ protocol=dyndns2
 ssl=yes
 use=web, web=https://api.ipify.org/
 server=YOUR_DDNS_SERVER[:PORT]
+script=/update
 login=YOUR_USERNAME
-password=YOUR_PASSWORD
+password='YOUR_PASSWORD'
 YOUR_HOSTNAME
 ```
 In older versions you might also have to change `/etc/default/ddclient`:
@@ -58,7 +59,7 @@ run_daemon="true"
 ```ini
 custom ddnsp {
         ddns-server = YOUR_DDNS_SERVER[:PORT]
-        ddns-path   = "/nic/update?hostname=%h&myip=%i"
+        ddns-path   = "/update?hostname=%h&myip=%i"
         username    = YOUR_USERNAME
         password    = YOUR_PASSWORD
         hostname    = YOUR_HOSTNAME
