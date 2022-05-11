@@ -71,6 +71,7 @@ write_log() (
 	printf '\n'
 )
 safecurl()  {
+	local stderr code=0
 	local opts=(
 		--silent           # -s, Don't show progress meter or error messages
 		--show-error       # -S, With -s show an error message if it fails
@@ -79,7 +80,17 @@ safecurl()  {
 		--max-time 30
 		--connect-timeout 10
 	)
-	curl "${opts[@]}" "$@"
+	exec 3>&1; stderr=$(curl "${opts[@]}" "$@" 2>&1 >&3) || code=$?; exec 3>&-
+	# Work around OpenSSL 3 'unexpected eof while reading' error on old servers
+	if ((code)) && [[ "$stderr" ]]; then
+		# shellcheck disable=SC2076
+		if [[ ':0A000126:' =~ "$stderr" ]]; then
+			code=0
+		else
+			echo "$stderr" >&2
+		fi
+	fi
+	return "$code"
 }
 
 #------------------------------------------------------------------------------
