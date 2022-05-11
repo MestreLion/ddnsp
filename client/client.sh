@@ -14,6 +14,7 @@ trap '>&2 echo "error: line $LINENO, status $?: $BASH_COMMAND"' ERR
 
 # Modifiable via CLI
 force=0
+setup=0
 config=${XDG_CONFIG_HOME:-"$HOME"/.config}/ddnsp-client.conf
 
 # Constants
@@ -81,6 +82,7 @@ usage() {
 	Options:
 	  -h|--help         - show this page.
 	  -f|--force        - Force IP update even if it did not change since last run.
+	  -S|--setup        - Create the config file if missing, print its path, and exit.
 	  -c|--config FILE  - use FILE for configuration instead of the default:
 	                      ${config}
 
@@ -94,6 +96,7 @@ for arg in "$@"; do [[ "$arg" == "-h" || "$arg" == "--help" ]] && usage; done
 while (($#)); do
 	case "$1" in
 	-f | --force) force=1;;
+	-S | --setup) setup=1;;
 	-c | --config) shift; config=${1:-};;
 	--config=*) config=${1#*=};;
 	-*) invalid "$1" ;;
@@ -105,6 +108,8 @@ done
 #------------------------------------------------------------------------------
 
 if ! [[ -r "$config" ]]; then
+	# shellcheck disable=SC2174
+	mkdir -p -m 700 -- "${config%/*}"
 	cat >>"$config" <<-EOF
 		# Personal DDNS client config file
 		# See https://github.com/MestreLion/ddnsp
@@ -116,7 +121,12 @@ if ! [[ -r "$config" ]]; then
 		hostname=$(escape "$hostname")
 	EOF
 	chmod 600 -- "$config"
-	${EDITOR:-editor} -- "$config"
+	echo "A blank configuration file was created, please edit it and try again" >&2
+	setup=1
+fi
+if ((setup)); then
+	echo "$config"
+	exit
 fi
 
 # shellcheck source=$HOME/.config/ddnsp-client.conf
