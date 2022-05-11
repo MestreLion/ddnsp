@@ -17,9 +17,12 @@ default_config=${XDG_CONFIG_HOME:-"$HOME"/.config}/${slug}.conf
 config=$default_config
 cron_opts=''
 opts=()
+verbose=1
 
 # -----------------------------------------------------------------------------
 
+green()   { tput setaf 2; tput bold; printf '%s' "$@"; tput sgr0; }
+message() { if (($# && verbose)); then green '* ' "$@"; echo; fi; }
 escape()  { printf '%q' "$@"; }
 argerr()  { printf '%s: %s\n' "${0##*/}" "${1:-error}" >&2; usage 1; }
 invalid() { argerr "invalid ${2:-option}: ${1:-}"; }
@@ -72,9 +75,11 @@ if [[ "$config" != "$default_config" ]]; then
 fi
 
 cron_opts="@hourly $(escape "$bin")${cron_opts} 2>> $(escape "$log")"
-cron_opts=${cron_opts//$HOME/~}
+cron_opts=${cron_opts//"$HOME"/'~'}
 
 # -----------------------------------------------------------------------------
+
+message "Installing Personal DDNS Client: ${slug}"
 
 # Create tree for executable and log file
 # shellcheck disable=SC2174
@@ -93,7 +98,7 @@ else
 fi
 
 # Run once to create the default blank config, and invoke the editor
-"$bin" "${opts[@]}" --setup
+"$bin" "${opts[@]}" --setup >/dev/null
 "${EDITOR:-editor}" -- "$config"
 
 # Add task to crontab
@@ -102,3 +107,5 @@ if ! crontab -l 2>/dev/null | grep -Fxq "$cron_opts"; then
 		echo "$cron_opts" ) |
 	crontab -
 fi
+
+message "Done!"
