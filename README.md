@@ -1,22 +1,23 @@
 `ddnsp` - Personal self-hosted Dynamic DNS
-===========================================
-
+===============================================================================
 Design
 ------
-
-- [`dyndns2`](https://help.dyn.com/remote-access-api/) protocol for client IP update,
-  a widespread standard created by [Dyn](https://dyn.com/) (formerly _DynDns_),
+- Use [**dyndns2**](https://help.dyn.com/remote-access-api) protocol for client
+  IP update, a widespread standard created by _DynDns_ (now [Dyn](https://dyn.com)),
   supported by third-party clients such as [`ddclient`](https://ddclient.net/) and
   [`inadyn`](https://troglobit.com/projects/inadyn/), and compatible with other
   dynamic DNS providers such as [Google Domains](https://domains.google).
 
-Protocol Documentation:
-- [Dyn](https://help.dyn.com/remote-access-api/)
-- [Dynu](https://www.dynu.com/DynamicDNS/IP-Update-Protocol)
-- [Google](https://support.google.com/domains/answer/6147083?hl=en&ref_topic=9018335)
+- Auto-registration via IP update:
+  - If requested hostname is available, register it with the given password
+  - Hostnames inactive for a given time are automatically expired and expunged
+  - Keep track of hostnames, password and last access time
+  - Reject update for an existing hostname if password do not match
 
----
-
+- DNS Servers to support:
+  - Self-hosted, local [BIND9](https://bind9.net/)
+  - [GoDaddy](https://developer.godaddy.com/)
+-------------------------------------------------------------------------------
 Installing
 ----------
 
@@ -69,3 +70,19 @@ In Debian/Ubuntu, also change `/etc/default/inadyn` to enable the daemon:
 ```ini
 RUN_DAEMON="yes"
 ```
+-------------------------------------------------------------------------------
+References
+----------
+- Other designs
+  - [PyDDNS](https://github.com/olimpo88/PyDDNS)
+  - [pboehm/ddns](https://github.com/pboehm/ddns)
+
+- `dyndns2` Protocol Documentation
+  - [Dyn](https://help.dyn.com/remote-access-api/)
+  - [Dynu](https://www.dynu.com/DynamicDNS/IP-Update-Protocol)
+  - [Google](https://support.google.com/domains/answer/6147083?hl=en&ref_topic=9018335)
+
+- GoDaddy DNS API
+  - [Domains API](https://developer.godaddy.com/doc/endpoint/domains) Official Documentation
+  - [GoDaddyPy](https://github.com/eXamadeus/godaddypy)
+  - [godaddy-dyndns](https://github.com/leonlatsch/godaddy-dyndns)
