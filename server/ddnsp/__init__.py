@@ -10,6 +10,8 @@ import os
 
 import flask
 
+import dao
+
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +37,8 @@ def create_app(config=None) -> flask.Flask:
         os.makedirs(app.instance_path, mode=0o700)
     except OSError:
         pass
+
+    dao.init_app(app)
 
     @app.route('/')
     def index():
