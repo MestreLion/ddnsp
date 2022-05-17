@@ -6,35 +6,51 @@ Personal DDNS Server
 """
 
 import logging
+import os
 
 import flask
 
 
-app = flask.Flask(__name__)
 log = logging.getLogger(__name__)
 
 
-@app.route('/')
-def index():
-    return "Welcome to <b>ddnsp</b> - Personal Self-Hosted Dynamic DNS\n"
+def create_app(config=None) -> flask.Flask:
+    # create and configure the app
+    app = flask.Flask(__name__, instance_relative_config=True)
+    app.config.from_mapping(
+        DATABASE=os.path.join(app.instance_path, 'ddnsp.db'),
+    )
+    if config is None:
+        app.config.from_pyfile('config.py', silent=True)
+    else:
+        app.config.from_mapping(config)
 
+    try:
+        os.makedirs(app.instance_path, mode=0o700)
+    except OSError:
+        pass
 
-@app.route('/nic/update')
-def legacy():
-    return flask.redirect(flask.url_for('update'), 301)  # Moved Permanently
+    @app.route('/')
+    def index():
+        return "Welcome to <b>ddnsp</b> - Personal Self-Hosted Dynamic DNS\n"
 
+    @app.route('/nic/update')
+    def legacy():
+        return flask.redirect(flask.url_for('update'), 301)  # Moved Permanently
 
-@app.route('/update')
-def update():
-    app.logger.debug('%s', flask.request.authorization)
-    app.logger.debug('%s', flask.request.args)
-    params = {
-        'hostname': flask.request.args.get('hostname'),
-        'ip': flask.request.args.get('myip', flask.request.remote_addr),
-    }
-    params.update(flask.request.authorization)
+    @app.route('/update')
+    def update():
+        app.logger.debug('%s', flask.request.authorization)
+        app.logger.debug('%s', flask.request.args)
+        params = {
+            'hostname': flask.request.args.get('hostname'),
+            'ip': flask.request.args.get('myip', flask.request.remote_addr),
+        }
+        params.update(flask.request.authorization)
 
-    return update_ip(**params)
+        return update_ip(**params)
+
+    return app
 
 
 def update_ip(username, password, hostname, ip):
@@ -48,4 +64,4 @@ if __name__ == '__main__':
         format="[%(levelname)-8s] %(asctime)s: %(message)s",  # %(module)s
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    app.run()
+    create_app().run()
