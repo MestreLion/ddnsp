@@ -15,6 +15,12 @@ log = logging.getLogger(__name__)
 
 
 def create_app(config=None) -> flask.Flask:
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="[%(asctime)s] %(levelname)-8s: %(message)s",  # %(module)s
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
     # create and configure the app
     app = flask.Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
@@ -56,12 +62,3 @@ def create_app(config=None) -> flask.Flask:
 def update_ip(username, password, hostname, ip):
     log.info(locals())
     return f"good {ip}"
-
-
-if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(levelname)-8s] %(asctime)s: %(message)s",  # %(module)s
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    create_app().run()

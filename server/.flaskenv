@@ -8,7 +8,7 @@
 
 # Python module and instance var / factory function to run
 # Default: {app,wsgi}{,.py}:{app,application,*,create_app(),make_app()}
-export FLASK_APP=server
+export FLASK_APP=ddnsp
 
 # Changes many behaviours, including enabling debugging
 export FLASK_ENV=development
