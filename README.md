@@ -76,6 +76,7 @@ References
 - Other designs
   - [PyDDNS](https://github.com/olimpo88/PyDDNS)
   - [pboehm/ddns](https://github.com/pboehm/ddns)
+  - [sftdyn](https://github.com/SFTtech/sftdyn)
 
 - `dyndns2` Protocol Documentation
   - [Dyn](https://help.dyn.com/remote-access-api/)
