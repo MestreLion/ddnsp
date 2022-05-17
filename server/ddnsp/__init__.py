@@ -10,7 +10,8 @@ import os
 
 import flask
 
-import dao
+from . import dao
+from . import methods
 
 
 log = logging.getLogger(__name__)
@@ -50,19 +51,12 @@ def create_app(config=None) -> flask.Flask:
 
     @app.route('/update')
     def update():
-        app.logger.debug('%s', flask.request.authorization)
-        app.logger.debug('%s', flask.request.args)
+        app.logger.debug('%s, %s', flask.request.authorization, flask.request.args)
         params = {
             'hostname': flask.request.args.get('hostname'),
             'ip': flask.request.args.get('myip', flask.request.remote_addr),
         }
         params.update(flask.request.authorization)
-
-        return update_ip(**params)
+        return methods.update_ip(**params)
 
     return app
-
-
-def update_ip(username, password, hostname, ip):
-    log.info(locals())
-    return f"good {ip}"
