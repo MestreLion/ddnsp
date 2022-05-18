@@ -39,3 +39,8 @@ def close_db(_e=None) -> None:
     db = flask.g.pop('db', None)
     if db is not None:
         db.close()
+
+
+# -----------------------------------------------------------------------------
+def update_timestamp(hostname):
+    pass

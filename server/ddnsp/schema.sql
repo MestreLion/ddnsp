@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS host;
 
 CREATE TABLE host (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
-	username TEXT      NOT NULL UNIQUE,
+	username TEXT      NOT NULL,
 	password TEXT      NOT NULL,
 	hostname TEXT      NOT NULL UNIQUE,
 	ip       TEXT,

@@ -6,33 +6,44 @@ Personal DDNS Server
 """
 
 import logging
+import pprint
 import os
 
 import flask
 
 from . import dao
+from . import dns
 from . import methods
 
-
-log = logging.getLogger(__name__)
+SLUG = __name__  # ddnsp
 
 
 def create_app(config=None) -> flask.Flask:
     logging.basicConfig(
         level=logging.DEBUG,
-        format="[%(asctime)s] %(levelname)-8s: %(message)s",  # %(module)s
+        format="[%(asctime)s] %(levelname)-8s: %(module)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    def ipath(*paths):
+        return os.path.join(app.instance_path, *paths)
+
     # create and configure the app
     app = flask.Flask(__name__, instance_relative_config=True)
+    if not app.debug:
+        logging.getLogger().setLevel(logging.INFO)
+
     app.config.from_mapping(
-        DATABASE=os.path.join(app.instance_path, 'ddnsp.db'),
+        DATABASE=ipath(f'{SLUG}.db'),
+        DNS_BACKEND='bind9'
     )
     if config is None:
-        app.config.from_pyfile('config.py', silent=True)
+        app.logger.info("Using config: %s", ipath(f'{SLUG}.cfg'))
+        app.config.from_pyfile(f'{SLUG}.cfg', silent=True)
     else:
         app.config.from_mapping(config)
+
+    app.logger.debug("App config: \n%s", pprint.pformat(app.config, indent=2))
 
     try:
         os.makedirs(app.instance_path, mode=0o700)
@@ -40,6 +51,7 @@ def create_app(config=None) -> flask.Flask:
         pass
 
     dao.init_app(app)
+    dns.init_app(app)
 
     @app.route('/')
     def index():
