@@ -6,6 +6,7 @@ DNS base and backend selector
 """
 
 import importlib
+import logging
 import pkgutil
 import typing as t
 
@@ -19,11 +20,10 @@ api:       t.Optional['DNSBase'] = None
 
 
 class DNSBase:
-    def __init__(self, app=None):
-        app = app or flask.current_app
-        prefix = f'DNS_{self.backend.upper()}'
-        self.config = {k: v for k, v in app.config.items() if k.startswith(prefix)}
-        self.log    = app.logger
+    def __init__(self, **kwargs):
+        app: flask.Flask = kwargs.pop('app', None) or flask.current_app
+        self.config: dict = app.config.get_namespace(f'DNS_{self.backend.upper()}_')
+        self.log: logging.Logger  = app.logger
         self.log.info("Using DNS backend: %s: %s.%s",
                       self.backend,
                       self.__class__.__module__,
@@ -34,7 +34,7 @@ class DNSBase:
     def backend(self) -> str:
         return self.__module__.split('.')[-1]
 
-    def update_ip(self, hostname, ip):
+    def update_ip(self, domain:str, name:str, ip:str, ttl:float=0) -> u.JsonDict:
         raise NotImplementedError
 
 
@@ -67,3 +67,19 @@ def init_app(app:flask.Flask=None, backend:str="") -> DNSBase:
         return api
     except KeyError:
         raise u.DDNSPError("No valid DNS backend for backend: %s", backend)
+
+
+def get_api() -> DNSBase:
+    if api is None:
+        init_app()
+    return api
+
+
+def update_ip(hostname, ip) -> object:
+    config = flask.current_app.config
+    domain = config.get('DNS_DOMAIN', '').strip('. ')
+    subdomain = config.get('DNS_SUBDOMAIN', '').strip('. ')
+    name = hostname.strip('. ')
+    if subdomain:
+        name = f'{hostname}.{subdomain}'
+    return get_api().update_ip(domain, name, ip, config.get('DNS_TTL', 0))

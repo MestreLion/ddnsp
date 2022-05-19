@@ -5,19 +5,107 @@
 GoDaddy DNS API
 """
 
+import logging
+import typing as t
+import urllib.parse
+
+import requests
+
 from .. import dns
+from .. import util as u
+
+log = logging.getLogger(__name__)
 
 
 class GodaddyAPI(dns.DNSBase):
-    def __init__(self, key:str="", secret:str="", **kwargs):
-        super().__init__(**kwargs)
-        self.key    = key    or self.config.get("DNS_GODADDY_KEY",    '')
-        self.secret = secret or self.config.get("DNS_GODADDY_SECRET", '')
+    HOST:    str   = 'https://api.godaddy.com'
+    OTE:     str   = 'https://api.ote-godaddy.com'  # OTE, Operational Test Environment
+    PATH:    str   = '/v1/domains'
+    TIMEOUT: float = 10
+
+    def __init__(self, **kw):
+        super().__init__(**kw)
+        self.key:       str = kw.pop('key',       self.config.get("key", ''))
+        self.secret:    str = kw.pop('secret',    self.config.get("secret", ''))
+        self.shopperid: str = kw.pop('shopperid', self.config.get("shopperid", ''))
+        self.ote:      bool = kw.pop('ote',       self.config.get("ote", False))
+        self.host:      str = kw.pop('host',      self.config.get("host", self.OTE if self.ote else self.HOST))
+        self.path:      str = kw.pop('path',      self.config.get("path", self.PATH))
 
     @property
-    def auth_header(self) -> dict:
-        return {'Authorization': f'sso-key {self.key}:{self.secret}'}
+    def auth_headers(self) -> dict:
+        headers = {'Authorization': f'sso-key {self.key}:{self.secret}'}
+        if self.shopperid:
+            headers['X-Shopper-Id'] = self.shopperid
+        return headers
 
-    def update_ip(self, hostname, ip):
-        self.log.debug("Updating %s to %s using %s",
-                       hostname, ip, self.auth_header)
+    @property
+    def base_url(self) -> str:
+        return urllib.parse.urljoin(self.host, self.path, allow_fragments=False)
+
+    def abs_url(self, *parts:str) -> str:
+        base = urllib.parse.urljoin(self.host, self.path, allow_fragments=False)
+        for part in filter(None, parts):
+            base = '{}/{}'.format(base.rstrip('/'), part.lstrip('/'))
+        return base
+
+    def request(
+            self,
+            method:  str,
+            path:    str,
+            *,
+            query:   dict              = None,
+            data:    u.Json            = None,
+            timeout: t.Optional[float] = 0,
+    ) -> u.Json:
+        """
+        Raw Godaddy API request
+        :param method: HTTP verb: GET, OPTIONS, HEAD, POST, PUT, PATCH, or DELETE
+        :param path: URL path to append to <base_url>
+        :param query: dict to be encoded as querystring in URL
+        :param data: data to be sent as JSON
+        :param timeout: in seconds. 0 for default TIMEOUT, None for no timeout.
+        :return: object loaded from JSON response
+        """
+        method = method.upper()
+        url = self.abs_url(path)
+
+        headers: dict = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        }
+        headers.update(self.auth_headers)
+
+        kwargs: dict = {}
+        if query:
+            kwargs['query'] = query
+        if data:
+            kwargs['json'] = data
+        if timeout is not None:
+            kwargs['timeout'] = timeout or self.TIMEOUT
+
+        log_args = tuple(filter(None, (method, url, query, data)))
+        log.debug((len(log_args) * "%s ").strip(), *log_args)
+
+        try:
+            response = requests.request(method.upper(), url, headers=headers, **kwargs)
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            raise u.DDNSPRequestError(e.response.text or e,
+                                      errno=e.response.status_code,
+                                      response=e.response)
+        except requests.RequestException as e:
+            raise u.DDNSPError(e)
+
+        if not len(response.text.strip()):
+            return {}
+        return response.json()
+
+    # -------------------------------------------------------------------------
+    def update_ip(self, domain:str, name:str, ip:str, ttl:float=0) -> u.JsonDict:
+        path = '{domain}/records/A/{name}'.format(domain=domain, name=name)
+        data = {'data': ip}
+        if ttl:
+            data['ttl'] = ttl
+        self.log.info("Updating %s.%s: %s", domain, name, ip)
+        return self.request('PUT', path, data=[data])

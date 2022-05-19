@@ -36,7 +36,7 @@ def update_ip(username, password, hostname, ip):
         return f'nochg {ip}'
 
     try:
-        dns.api.update_ip(hostname, ip)
+        dns.update_ip(hostname, ip)
     except u.DDNSPError as e:
         return 'dnserr'
 
@@ -55,7 +55,7 @@ def get_entry(hostname) -> dict:
 
 def register(username, password, hostname, ip) -> None:
     """Register a new hostname in Database and DNS"""
-    dns.api.update_ip(hostname=hostname, ip=ip)
+    dns.update_ip(hostname=hostname, ip=ip)
     log.info("Registered new account: %s", u.obfuscate(locals()))
 
 

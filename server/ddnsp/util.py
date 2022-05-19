@@ -5,6 +5,15 @@
 Miscellaneous functions and classes.
 """
 
+import typing as t
+
+import requests
+
+
+# For the purposes of REST APIs only!
+JsonDict: 't.TypeAlias' = t.Dict[str, t.Any]
+Json:     't.TypeAlias' = t.Union[JsonDict, t.List[JsonDict]]
+
 
 class DDNSPError(Exception):
     """Base class for custom exceptions, with errno and %-formatting for args.
@@ -12,13 +21,20 @@ class DDNSPError(Exception):
     All modules in this package raise this (or a subclass) for all
     explicitly raised, business-logic, expected or handled exceptions
     """
-    def __init__(self, msg: object = "", *args, errno: int = 0):
-        super().__init__((str(msg) % args) if args else msg)
+    def __init__(self, msg: object = "", *args, errno: int = 0, **kwargs):
+        # kwargs is there for multi-base, cooperative subclassing
+        # noinspection PyArgumentList
+        super().__init__((str(msg) % args) if args else msg, **kwargs)
         self.errno = errno
+
+
+class DDNSPRequestError(DDNSPError, requests.RequestException):
+    """HTTP Request error"""
 
 
 # noinspection PyPep8Naming
 class classproperty:
+    """Read-only classmethod property decorator, for Python < 3.9"""
     def __init__(self, func):
         self.fget = func
 
