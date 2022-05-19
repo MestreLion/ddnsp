@@ -84,6 +84,13 @@ References
   - [Google](https://support.google.com/domains/answer/6147083?hl=en&ref_topic=9018335)
 
 - GoDaddy DNS API
-  - [Domains API](https://developer.godaddy.com/doc/endpoint/domains) Official Documentation
-  - [GoDaddyPy](https://github.com/eXamadeus/godaddypy)
-  - [godaddy-dyndns](https://github.com/leonlatsch/godaddy-dyndns)
+  - [Domains API](https://developer.godaddy.com/doc/endpoint/domains):
+      Official Documentation
+  - [mintuhouse/godaddy-api](https://github.com/mintuhouse/godaddy-api):
+      Javascript, great Swagger docs
+  - [eXamadeus/GoDaddyPy](https://github.com/eXamadeus/godaddypy):
+      possibly the most used on PiPy
+  - [leonlatsch/godaddy-dyndns](https://github.com/leonlatsch/godaddy-dyndns):
+      good KISS reference: single file, < 100 lines
+  - [CarlEdman/godaddy-ddns](https://github.com/CarlEdman/godaddy-ddns):
+      CLI, and another KISS reference
