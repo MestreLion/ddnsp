@@ -1,4 +1,6 @@
 *.pem
 .env
 *.db
+test*
+!tests/
 instance/
