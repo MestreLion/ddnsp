@@ -19,23 +19,19 @@ SLUG = __name__  # ddnsp
 
 
 def create_app(config=None) -> flask.Flask:
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format="[%(asctime)s] %(levelname)-8s: %(module)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-
     def ipath(*paths):
         return os.path.join(app.instance_path, *paths)
 
     # create and configure the app
     app = flask.Flask(__name__, instance_relative_config=True)
-    if not app.debug:
-        logging.getLogger().setLevel(logging.INFO)
-
     app.config.from_mapping(
         DATABASE=ipath(f'{SLUG}.db'),
         DNS_BACKEND='bind9'
+    )
+    logging.basicConfig(
+        level=logging.DEBUG if app.debug else logging.INFO,
+        format="[%(asctime)s] %(levelname)-8s: %(module)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
     if config is None:
         app.logger.info("Using config: %s", ipath(f'{SLUG}.cfg'))
