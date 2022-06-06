@@ -102,10 +102,31 @@ class GodaddyAPI(dns.DNSBase):
         return response.json()
 
     # -------------------------------------------------------------------------
-    def update_ip(self, domain:str, name:str, ip:str, ttl:float=0) -> u.JsonDict:
-        path = '{domain}/records/A/{name}'.format(domain=domain, name=name)
-        data = {'data': ip}
-        if ttl:
-            data['ttl'] = ttl
-        self.log.info("Updating %s.%s: %s", domain, name, ip)
-        return self.request('PUT', path, data=[data])
+    def get_ips(self, domain:str, name:str, ipv6=False) -> t.List[str]:
+        rt = 'AAAA' if ipv6 else 'A'
+        res = self.request('GET', '{domain}/records/{rt}/{name}'.format(**locals()))
+        return [_['data'] for _ in res]
+
+    def update_ips(self, domain:str, name:str, ips:t.Iterable[str], ttl:int=0, ipv6=False) -> None:
+        rt = 'AAAA' if ipv6 else 'A'
+        path = '{domain}/records/{rt}/{name}'.format(**locals())
+        iplist = list(ips)
+        data = []
+        for ip in iplist:
+            record = {'data': ip}
+            if ttl:
+                record['ttl'] = ttl
+            data.append(record)
+        self.log.info("Updating %s.%s: %s",
+                      domain, name, iplist if len(iplist) > 1 else iplist[0])
+        self.request('PUT', path, data=data)
+
+    def get_ip(self, domain:str, name:str, ipv6=False) -> str:
+        res = self.get_ips(**locals())
+        return res[0] if res else ''
+
+    def update_ip(self, domain:str, name:str, ip:str, ttl:int=0, ipv6=False) -> None:
+        args = locals().copy()
+        args['ips'] = [ip]
+        del args['ip']
+        self.update_ips(**args)
