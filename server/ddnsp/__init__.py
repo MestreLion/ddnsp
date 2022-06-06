@@ -16,12 +16,13 @@ from . import dns
 from . import methods
 from . import util as u
 
-SLUG = __name__,  # ddnsp
+SLUG = __name__  # ddnsp
 
 CONFIG_DEFAULTS = dict(
     DNS_BACKEND = 'bind9',
     DNS_DOMAIN = '',
     DNS_SUBDOMAIN = '',
+    DNS_TTL = 0,
     HOSTNAME_MAX_LENGTH = 50,
 )
 
@@ -68,12 +69,15 @@ def create_app(config=None) -> flask.Flask:
 
     @app.route('/update')
     def update():
-        app.logger.debug('%s, %s', flask.request.authorization, flask.request.args)
+        req = flask.request
+        app.logger.debug('%s, %s', req.authorization, req.args)
+        if req.authorization is None:
+            return "badauth"
         params = {
-            'hostname': flask.request.args.get('hostname'),
-            'ip': flask.request.args.get('myip', flask.request.remote_addr),
+            'hostname': req.args.get('hostname'),
+            'ip': req.args.get('myip', req.remote_addr),
         }
-        params.update(flask.request.authorization)
+        params.update(req.authorization)
         return methods.update_ip(**params)
 
     return app

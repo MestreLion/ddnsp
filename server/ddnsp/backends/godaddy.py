@@ -128,5 +128,5 @@ class GodaddyAPI(dns.DNSBase):
     def update_ip(self, domain:str, name:str, ip:str, ttl:int=0, ipv6=False) -> None:
         args = locals().copy()
         args['ips'] = [ip]
-        del args['ip']
+        del args['ip'], args['self']
         self.update_ips(**args)
