@@ -46,3 +46,14 @@ def obfuscate(d:dict, keys:list=None) -> dict:
     if keys is None:
         keys = ['password']
     return {k: (5 * '*' if k.lower() in keys else v) for k, v in d.items()}
+
+
+def is_ipv4(address:str) -> bool:
+    # Alternatives:
+    # - ipaddress.ip_address(address)
+    # - socket.inet_aton(address)
+    try:
+        octets = address.split('.')
+        return 4 == len(octets) == len([b for b in octets if 0 <= int(b) <= 255])
+    except ValueError:
+        return False

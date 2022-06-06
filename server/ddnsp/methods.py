@@ -18,6 +18,7 @@ from . import util as u
 log = logging.getLogger(__name__)
 
 HOSTNAME_RE = re.compile(r'[\da-z][-_\da-z]*', re.ASCII)
+USERNAME_RE = re.compile(r'[\da-z][-_\da-z]*', re.ASCII)
 
 
 def update_ip(username, password, hostname, ip) -> str:
@@ -55,12 +56,27 @@ def check_args(config:flask.Config, args:dict) -> dict:
     """Check for required and well-formed arguments"""
     data = args.copy()
     hostname = args.get('hostname', '').split('.', 1)[0].strip()
+    username = args.get('username', '').strip()
+    password = args.get('password', '').strip()
 
     if not ((0 < len(hostname) <= config['HOSTNAME_MAX_LENGTH']) and
             HOSTNAME_RE.match(hostname)):
-        raise u.DDNSPError("nohost")  # badauth, notfqdn, ...
+        raise u.DDNSPError("nohost")
+
+    if not ((0 < len(username) <= config['USERNAME_MAX_LENGTH']) and
+            USERNAME_RE.match(username)):
+        raise u.DDNSPError("badauth")
+
+    if not (config['PASSWORD_MIN_LENGTH'] <= len(password) <=
+            config['PASSWORD_MAX_LENGTH']):
+        raise u.DDNSPError("badauth")
+
+    if not u.is_ipv4(args['ip']):
+        raise u.DDNSPError("badagent")  # no good choices for bad arguments
 
     data['hostname'] = hostname
+    data['username'] = username
+    data['password'] = password
     return data
 
 
