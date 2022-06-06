@@ -86,9 +86,13 @@ def create_app(config=None) -> flask.Flask:
 def validate_config(config) -> None:
     config['DNS_DOMAIN']    = config['DNS_DOMAIN'].strip('. ')
     config['DNS_SUBDOMAIN'] = config['DNS_SUBDOMAIN'].strip('. ')
-    config['HOSTNAME_MAX_LENGTH'] = int(config['HOSTNAME_MAX_LENGTH'])
+    try:
+        config['HOSTNAME_MAX_LENGTH'] = int(config['HOSTNAME_MAX_LENGTH'])
+        config['DNS_TTL'] = int(config['DNS_TTL'])
+    except ValueError:
+        raise u.DDNSPError("Error in config file values, check integer keys")
     if not (
         config['DNS_DOMAIN'] and
         config['HOSTNAME_MAX_LENGTH']
     ):
-        raise u.DDNSPError("Error in config file values")
+        raise u.DDNSPError("Error in config file values, check required keys")

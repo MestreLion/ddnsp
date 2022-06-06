@@ -6,6 +6,9 @@ Business logic methods
 """
 
 import logging
+import re
+
+import flask
 
 from . import dns
 from . import dao
@@ -14,15 +17,20 @@ from . import util as u
 
 log = logging.getLogger(__name__)
 
+HOSTNAME_RE = re.compile(r'[\da-z][-_\da-z]*', re.ASCII)
 
-def update_ip(username, password, hostname, ip):
+
+def update_ip(username, password, hostname, ip) -> str:
     """Main method for updating IP"""
     args = locals().copy()
+    config = flask.current_app.config
     log.info(u.obfuscate(args))
-    res = check_args(**args)
-    if res:
-        return res
+    try:
+        args = check_args(config, args)
+    except u.DDNSPError as e:
+        return str(e)
 
+    hostname = args['hostname']
     data = get_entry(hostname)
     if data:
         if not check_auth(data, **args):
@@ -43,9 +51,17 @@ def update_ip(username, password, hostname, ip):
     return f'good {ip}'
 
 
-def check_args(**args) -> str:
+def check_args(config:flask.Config, args:dict) -> dict:
     """Check for required and well-formed arguments"""
-    return ""  # badauth, notfqdn, nohost
+    data = args.copy()
+    hostname = args.get('hostname', '').split('.', 1)[0].strip()
+
+    if not ((0 < len(hostname) <= config['HOSTNAME_MAX_LENGTH']) and
+            HOSTNAME_RE.match(hostname)):
+        raise u.DDNSPError("nohost")  # badauth, notfqdn, ...
+
+    data['hostname'] = hostname
+    return data
 
 
 def get_entry(hostname) -> dict:

@@ -77,9 +77,10 @@ def get_api() -> DNSBase:
 
 def update_ip(hostname, ip) -> object:
     config = flask.current_app.config
-    domain = config.get('DNS_DOMAIN', '').strip('. ')
-    subdomain = config.get('DNS_SUBDOMAIN', '').strip('. ')
-    name = hostname.strip('. ')
+    domain    = config['DNS_DOMAIN']
+    subdomain = config['DNS_SUBDOMAIN']
+    ttl       = config['DNS_TTL']
+    name = hostname
     if subdomain:
         name = f'{hostname}.{subdomain}'
-    return get_api().update_ip(domain, name, ip, config.get('DNS_TTL', 0))
+    return get_api().update_ip(domain=domain, name=name, ip=ip, ttl=ttl)
