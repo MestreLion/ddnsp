@@ -14,8 +14,16 @@ import flask
 from . import dao
 from . import dns
 from . import methods
+from . import util as u
 
-SLUG = __name__  # ddnsp
+SLUG = __name__,  # ddnsp
+
+CONFIG_DEFAULTS = dict(
+    DNS_BACKEND = 'bind9',
+    DNS_DOMAIN = '',
+    DNS_SUBDOMAIN = '',
+    HOSTNAME_MAX_LENGTH = 50,
+)
 
 
 def create_app(config=None) -> flask.Flask:
@@ -26,7 +34,7 @@ def create_app(config=None) -> flask.Flask:
     app = flask.Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         DATABASE=ipath(f'{SLUG}.db'),
-        DNS_BACKEND='bind9'
+        **CONFIG_DEFAULTS,
     )
     logging.basicConfig(
         level=logging.DEBUG if app.debug else logging.INFO,
@@ -40,6 +48,7 @@ def create_app(config=None) -> flask.Flask:
         app.config.from_mapping(config)
 
     app.logger.debug("App config: \n%s", pprint.pformat(app.config, indent=2))
+    validate_config(app.config)
 
     try:
         os.makedirs(app.instance_path, mode=0o700)
@@ -68,3 +77,14 @@ def create_app(config=None) -> flask.Flask:
         return methods.update_ip(**params)
 
     return app
+
+
+def validate_config(config) -> None:
+    config['DNS_DOMAIN']    = config['DNS_DOMAIN'].strip('. ')
+    config['DNS_SUBDOMAIN'] = config['DNS_SUBDOMAIN'].strip('. ')
+    config['HOSTNAME_MAX_LENGTH'] = int(config['HOSTNAME_MAX_LENGTH'])
+    if not (
+        config['DNS_DOMAIN'] and
+        config['HOSTNAME_MAX_LENGTH']
+    ):
+        raise u.DDNSPError("Error in config file values")
