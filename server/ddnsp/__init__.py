@@ -45,7 +45,7 @@ def create_app(config=None) -> flask.Flask:
     )
     logging.basicConfig(
         level=logging.DEBUG if app.debug else logging.INFO,
-        format="[%(asctime)s] %(levelname)-8s: %(module)s: %(message)s",
+        format="[%(asctime)s] %(levelname)-8s: %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     if config is None:
@@ -76,15 +76,18 @@ def create_app(config=None) -> flask.Flask:
     @app.route('/update')
     def update():
         req = flask.request
-        app.logger.debug('%s, %s', req.authorization, req.args)
-        if req.authorization is None:
-            return "badauth"
+        auth = req.authorization
+        app.logger.debug('%s, %s', auth, req.args)
         params = {
-            'hostname': req.args.get('hostname'),
-            'ip': req.args.get('myip', req.remote_addr),
+            'username': req.args.get('username', auth.get('username', '')),
+            'password': req.args.get('password', auth.get('password', '')),
+            'hostname': req.args.get('hostname', ''),
+            'ip': req.args.get('myip', req.remote_addr or ''),
         }
-        params.update(req.authorization)
-        return methods.update_ip(**params)
+        app.logger.info("REQ: %s", u.obfuscate(params))
+        res = methods.update_ip(**params)
+        app.logger.info("RES: %s", res)
+        return res
 
     return app
 

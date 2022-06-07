@@ -23,23 +23,22 @@ USERNAME_RE = re.compile(r'[\da-z][-_\da-z]*', re.ASCII)
 
 def update_ip(username, password, hostname, ip) -> str:
     """Main method for updating IP"""
-    args = locals().copy()
-    config = flask.current_app.config
-    log.info(u.obfuscate(args))
     try:
-        args = check_args(config, args)
+        args = check_args(flask.current_app.config, locals())
     except u.DDNSPError as e:
         return str(e)
 
     hostname = args['hostname']
     data = dao.get_host(hostname)
-    if data:
-        if not check_auth(data, **args):
-            return 'badauth'
-        dao.update_timestamp(hostname)
-    else:
+
+    if not data:
         register(**args)
         return f'good {ip}'
+
+    if not check_auth(data, **args):
+        return 'badauth'
+
+    dao.update_timestamp(hostname)
 
     if ip == data['ip']:
         return f'nochg {ip}'
