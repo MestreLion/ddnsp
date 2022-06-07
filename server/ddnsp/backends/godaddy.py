@@ -117,8 +117,6 @@ class GodaddyAPI(dns.DNSBase):
             if ttl:
                 record['ttl'] = ttl
             data.append(record)
-        self.log.info("Updating %s.%s: %s",
-                      name, domain, iplist if len(iplist) > 1 else iplist[0])
         self.request('PUT', path, data=data)
 
     def get_ip(self, domain:str, name:str, ipv6=False) -> str:

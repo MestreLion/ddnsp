@@ -13,9 +13,12 @@ import typing as t
 
 import flask
 
+from . import util as u
+
 log = logging.getLogger(__name__)
 
 Row: 't.TypeAlias' = sqlite3.Row
+R = t.TypeVar('R', bound=t.Union[Row, t.Dict[str, t.Any]])  # "Row-like"
 
 
 def create_db():
@@ -53,11 +56,13 @@ def close_db(_e=None) -> None:
 def execute(query, args) -> t.Optional[int]:
     """Execute an INSERT, UPDATE or DELETE, return inserted or updated row ID"""
     # using conn's context manager for auto-commit
+    log.debug("Executing SQL: %r, %s", query, args)
     with get_db() as conn, contextlib.closing(conn.execute(query, args)) as cur:
         return cur.lastrowid
 
 
 def fetch(query, args=()) -> t.List[Row]:
+    log.debug("Fetching  SQL: %r, %s", query, args)
     with contextlib.closing(get_db().execute(query, args)) as cur:
         return cur.fetchall()
 
@@ -67,19 +72,24 @@ def fetchone(query, args=()) -> t.Optional[Row]:
     return rv[0] if rv else None
 
 
+def _sql_insert(table:str, data: R) -> t.Tuple[str, R]:
+    keylist = ', :'.join(data.keys())
+    return (f"INSERT INTO {table} ({keylist.replace(':', '')})"
+            f" VALUES (:{keylist})",
+            data)
+
+
 # -----------------------------------------------------------------------------
-def update_timestamp(hostname:str) -> int:
-    return execute('UPDATE host'
-                   ' SET changed = CURRENT_TIMESTAMP'
-                   ' WHERE hostname = ?', [hostname])
+def update_timestamp(hostname:str) -> None:
+    execute('UPDATE host'
+            ' SET changed = CURRENT_TIMESTAMP'
+            ' WHERE hostname = ?', [hostname])
 
 
 def get_host(hostname:str) -> t.Optional[Row]:
     return fetchone('SELECT * FROM host WHERE hostname = ?', [hostname])
 
 
-def add_host(username, password, hostname, ip) -> int:
-    return execute('INSERT INTO host'
-                   ' ( username,  password,  hostname,  ip) VALUES'
-                   ' (:username, :password, :hostname, :ip)',
-                   locals())
+def add_host(username, password, hostname, ip) -> None:
+    execute(*_sql_insert('host', locals()))
+    log.info("Registered new account: %s", u.obfuscate(locals()))

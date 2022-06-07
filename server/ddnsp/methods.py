@@ -83,9 +83,8 @@ def check_args(config:flask.Config, args:dict) -> dict:
 def register(username, password, hostname, ip) -> None:
     """Register a new hostname in Database and DNS"""
     data = locals().copy()
-    dao.add_host(**data)
     dns.update_ip(hostname=hostname, ip=ip)
-    log.info("Registered new account: %s", u.obfuscate(data))
+    dao.add_host(**data)
 
 
 def check_auth(data, **args) -> bool:

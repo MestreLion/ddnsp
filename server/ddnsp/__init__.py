@@ -16,6 +16,9 @@ from . import dns
 from . import methods
 from . import util as u
 
+
+__all__ = ['CONFIG_DEFAULTS', 'create_app']
+
 SLUG = __name__  # ddnsp
 
 CONFIG_DEFAULTS = dict(

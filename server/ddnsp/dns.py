@@ -15,6 +15,8 @@ import flask
 from . import util as u
 
 
+log = logging.getLogger(__name__)
+
 _backends: t.Dict[str,'DNSBase'] = {}
 api:       t.Optional['DNSBase'] = None
 
@@ -34,7 +36,7 @@ class DNSBase:
     def backend(self) -> str:
         return self.__module__.split('.')[-1]
 
-    def update_ip(self, domain:str, name:str, ip:str, ttl:float=0) -> u.JsonDict:
+    def update_ip(self, domain:str, name:str, ip:str, ttl:float=0) -> None:
         raise NotImplementedError
 
 
@@ -75,7 +77,7 @@ def get_api() -> DNSBase:
     return api
 
 
-def update_ip(hostname, ip) -> object:
+def update_ip(hostname, ip) -> None:
     config = flask.current_app.config
     domain    = config['DNS_DOMAIN']
     subdomain = config['DNS_SUBDOMAIN']
@@ -83,4 +85,5 @@ def update_ip(hostname, ip) -> object:
     name = hostname
     if subdomain:
         name = f'{hostname}.{subdomain}'
-    return get_api().update_ip(domain=domain, name=name, ip=ip, ttl=ttl)
+    get_api().update_ip(domain=domain, name=name, ip=ip, ttl=ttl)
+    log.info("Updated IP: %s.%s: %s", name, domain, ip)
