@@ -32,7 +32,7 @@ def update_ip(username, password, hostname, ip) -> str:
         return str(e)
 
     hostname = args['hostname']
-    data = get_entry(hostname)
+    data = dao.get_host(hostname)
     if data:
         if not check_auth(data, **args):
             return 'badauth'
@@ -80,15 +80,12 @@ def check_args(config:flask.Config, args:dict) -> dict:
     return data
 
 
-def get_entry(hostname) -> dict:
-    """Retrieve all info about hostname from database"""
-    return {}
-
-
 def register(username, password, hostname, ip) -> None:
     """Register a new hostname in Database and DNS"""
+    data = locals().copy()
+    dao.add_host(**data)
     dns.update_ip(hostname=hostname, ip=ip)
-    log.info("Registered new account: %s", u.obfuscate(locals()))
+    log.info("Registered new account: %s", u.obfuscate(data))
 
 
 def check_auth(data, **args) -> bool:

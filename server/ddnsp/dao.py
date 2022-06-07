@@ -5,10 +5,17 @@
 Data Access Objects
 """
 
-import sqlite3
+import contextlib
+import logging
 import os
+import sqlite3
+import typing as t
 
 import flask
+
+log = logging.getLogger(__name__)
+
+Row: 't.TypeAlias' = sqlite3.Row
 
 
 def create_db():
@@ -32,6 +39,7 @@ def get_db() -> sqlite3.Connection:
             flask.current_app.config['DATABASE'],
             detect_types=sqlite3.PARSE_DECLTYPES,
         )
+    flask.g.db.row_factory = sqlite3.Row
     return flask.g.db
 
 
@@ -42,5 +50,36 @@ def close_db(_e=None) -> None:
 
 
 # -----------------------------------------------------------------------------
-def update_timestamp(hostname):
-    pass
+def execute(query, args) -> t.Optional[int]:
+    """Execute an INSERT, UPDATE or DELETE, return inserted or updated row ID"""
+    # using conn's context manager for auto-commit
+    with get_db() as conn, contextlib.closing(conn.execute(query, args)) as cur:
+        return cur.lastrowid
+
+
+def fetch(query, args=()) -> t.List[Row]:
+    with contextlib.closing(get_db().execute(query, args)) as cur:
+        return cur.fetchall()
+
+
+def fetchone(query, args=()) -> t.Optional[Row]:
+    rv = fetch(query, args)
+    return rv[0] if rv else None
+
+
+# -----------------------------------------------------------------------------
+def update_timestamp(hostname:str) -> int:
+    return execute('UPDATE host'
+                   ' SET changed = CURRENT_TIMESTAMP'
+                   ' WHERE hostname = ?', [hostname])
+
+
+def get_host(hostname:str) -> t.Optional[Row]:
+    return fetchone('SELECT * FROM host WHERE hostname = ?', [hostname])
+
+
+def add_host(username, password, hostname, ip) -> int:
+    return execute('INSERT INTO host'
+                   ' ( username,  password,  hostname,  ip) VALUES'
+                   ' (:username, :password, :hostname, :ip)',
+                   locals())
