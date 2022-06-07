@@ -10,6 +10,7 @@ import pprint
 import os
 
 import flask
+import flask.logging
 
 from . import dao
 from . import dns
@@ -32,6 +33,11 @@ CONFIG_DEFAULTS = dict(
     PASSWORD_MIN_LENGTH = 6,
 )
 
+flask.logging.default_handler.setFormatter(
+    logging.Formatter("[%(asctime)s] %(levelname)-8s: %(name)s: %(message)s",
+                      "%Y-%m-%d %H:%M:%S")
+)
+
 
 def create_app(config=None) -> flask.Flask:
     def ipath(*paths):
@@ -42,11 +48,6 @@ def create_app(config=None) -> flask.Flask:
     app.config.from_mapping(
         DATABASE=ipath(f'{SLUG}.db'),
         **CONFIG_DEFAULTS,
-    )
-    logging.basicConfig(
-        level=logging.DEBUG if app.debug else logging.INFO,
-        format="[%(asctime)s] %(levelname)-8s: %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
     )
     if config is None:
         app.logger.info("Using config: %s", ipath(f'{SLUG}.cfg'))
