@@ -59,6 +59,7 @@ require()   {
 }
 
 write_log() (
+	# shellcheck disable=SC2030
 	if [[ "${logfile:-}" ]]; then
 		mkdir -p -- "$(dirname "$logfile")"
 		exec >> "$logfile"
@@ -107,6 +108,7 @@ usage() {
 		USAGE
 		exit 1
 	fi
+	# shellcheck disable=SC2031
 	cat <<-USAGE
 
 	Personal DDNS Client
