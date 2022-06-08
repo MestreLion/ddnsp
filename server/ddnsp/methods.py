@@ -25,12 +25,14 @@ def update_ip(username, password, hostname, ip) -> str:
     """Main method for updating IP"""
     try:
         args = check_args(flask.current_app.config, locals())
+        hostname = args['hostname']
+        username = args['username']
+        password = args['hostname']
+        ip       = args['ip']
     except u.DDNSPError as e:
         return str(e)
 
-    hostname = args['hostname']
     data = dao.get_host(hostname)
-
     if not data:
         register(**args)
         return f'good {ip}'
@@ -88,4 +90,4 @@ def register(username, password, hostname, ip) -> None:
 
 def check_auth(data, **args) -> bool:
     """Check authentication data against supplied args"""
-    return True
+    return all(data[k] == args[k] for k in ('hostname', 'username', 'password'))
