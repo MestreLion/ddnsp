@@ -93,3 +93,13 @@ def get_host(hostname:str) -> t.Optional[Row]:
 def add_host(username, password, hostname, ip) -> None:
     execute(*_sql_insert('host', locals()))
     log.info("Registered new account: %s", u.obfuscate(locals()))
+
+
+def update_password(hostname, password) -> None:
+    execute('UPDATE host SET password = :password WHERE hostname = :hostname',
+            locals())
+
+
+def update_ip(hostname, ip) -> None:
+    execute('UPDATE host SET ip = :ip WHERE hostname = :hostname',
+            locals())

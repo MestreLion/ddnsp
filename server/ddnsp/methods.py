@@ -10,8 +10,10 @@ import re
 
 import flask
 
+
 from . import dns
 from . import dao
+from . import hasher
 from . import util as u
 
 
@@ -47,6 +49,7 @@ def update_ip(username, password, hostname, ip) -> str:
 
     try:
         dns.update_ip(hostname, ip)
+        dao.update_ip(hostname, ip)
     except u.DDNSPError as e:
         return 'dnserr'
 
@@ -83,11 +86,18 @@ def check_args(config:flask.Config, args:dict) -> dict:
 
 def register(username, password, hostname, ip) -> None:
     """Register a new hostname in Database and DNS"""
-    data = locals().copy()
+    password = hasher.hash_password(password)
     dns.update_ip(hostname=hostname, ip=ip)
-    dao.add_host(**data)
+    dao.add_host(**locals())
 
 
 def check_auth(data, **args) -> bool:
     """Check authentication data against supplied args"""
-    return all(data[k] == args[k] for k in ('hostname', 'username', 'password'))
+    password = args['password']
+    hashed   = data['password']
+    if not (all(data[k] == args[k] for k in ('hostname', 'username')) and
+            hasher.verify(hashed, password)):
+        return False
+    if hasher.needs_update(hashed):
+        dao.update_password(data['hostname'], hasher.hash_password(password))
+    return True
