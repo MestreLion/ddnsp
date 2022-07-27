@@ -20,4 +20,4 @@ opts=(
 )
 
 # Python 3.7 is the current minimum as of v2.1.0 (2022-03-28)
-python3.7 -m flask run "${opts[@]}" "$@"
+venv/bin/python -m flask run "${opts[@]}" "$@"
