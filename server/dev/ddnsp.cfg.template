@@ -1,0 +1,22 @@
+# Supported DNS backends: 'godaddy', 'bind9'
+DNS_BACKEND   = ''
+DNS_DOMAIN    = 'example.com'
+DNS_SUBDOMAIN = 'd'
+
+# Production
+DNS_GODADDY_KEY      = ''
+DNS_GODADDY_SECRET   = ''
+# OTE
+# DNS_GODADDY_OTE    = True
+# DNS_GODADDY_KEY    = ''
+# DNS_GODADDY_SECRET = ''
+
+HOSTNAME_MAX_LENGTH = 20
+
+# Password hashing parameters, should be tuned to server hardware specs
+# https://argon2-cffi.readthedocs.io/en/stable/parameters.html
+# Default as of v21.2.0 (2021-12) is RFC 9106:
+# t=3 (3 "passes"), m=65536 (64MiB), p=4 (4 threads)
+ARGON2_TIME_COST    = 3
+#ARGON2_MEMORY_COST = 65536
+#ARGON2_PARALLELISM = 4
