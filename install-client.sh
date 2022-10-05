@@ -21,6 +21,7 @@ verbose=1
 
 # -----------------------------------------------------------------------------
 
+exists()  { type "$1" >/dev/null 2>&1; }
 green()   { tput setaf 2; tput bold; printf '%s' "$@"; tput sgr0; }
 message() { if (($# && verbose)); then green '* ' "$@"; echo; fi; }
 escape()  { printf '%q' "$@"; }
@@ -80,6 +81,11 @@ cron_opts=${cron_opts//"$HOME"/'~'}
 # -----------------------------------------------------------------------------
 
 message "Installing Personal DDNS Client: ${slug}"
+
+# Install dependencies
+if ! exists curl; then
+	sudo apt install -y curl
+fi
 
 # Create tree for executable and log file
 # shellcheck disable=SC2174
