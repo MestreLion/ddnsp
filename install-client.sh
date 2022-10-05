@@ -87,9 +87,13 @@ if ! exists curl; then
 	sudo apt install -y curl
 fi
 
-# Create tree for executable and log file
+# Create tree for executable, config and log file
+tree=()
+for file in "$bin" "$config" "$log"; do
+	tree+=( "$(dirname "$file")" )
+done
 # shellcheck disable=SC2174
-mkdir -p -m 700 -- "$(dirname "$bin")" "$(dirname "$log")"
+mkdir -p -m 700 -- "${tree[@]}"
 
 # Create executable, sym-linking or downloading it
 rm -f -- "$bin"
