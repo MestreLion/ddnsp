@@ -14,6 +14,11 @@ here=$(dirname "$(readlink -f -- "$0")")
 server_dir=$(realpath --no-symlinks -- "$here"/..)
 instance=$server_dir/instance
 
+# Use the latest available Python
+python=$(compgen -c python | grep -P '^python\d[.\d]*$' | sort -ruV | head -n1)
+venv=$server_dir/venv
+pip=$venv/bin/pip
+
 bin=$server_dir/server.sh
 service=$xdg_data/systemd/user/$slug-dev.service  # or $xdg_config, same tail
 unit=${service##*/}
@@ -64,6 +69,7 @@ usage() {
 
 	Performs the following steps:
 	- Install needed dependency packages (may require 'sudo' privileges)
+	- Create and update the Python Virtual Environment
 	- Install and activate UFW Firewall rules
 	- Install and start systemd unit daemon
 	- Install certbot renew hook to update certificates and renew them
@@ -83,7 +89,12 @@ for arg in "$@"; do [[ "$arg" == "-h" || "$arg" == "--help" ]] && usage; done
 message "Installing Personal DDNS Development Server: ${slug}"
 
 # Install dependencies
-install_packages git
+install_packages python3-{pip,venv}
+
+# Create or update the Python Virtual Environment
+"$python" -m venv "$venv"
+PYTHONWARNINGS="ignore::DeprecationWarning" "$pip" install --upgrade pip setuptools wheel
+"$pip" install --upgrade -r "$server_dir"/requirements.txt
 
 # Create development config files from templates
 # .env
