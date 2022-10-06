@@ -19,6 +19,8 @@ python=$(compgen -c python | grep -P '^python\d[.\d]*$' | sort -ruV | head -n1)
 venv=$server_dir/venv
 pip=$venv/bin/pip
 
+ufw_profile=/etc/ufw/applications.d/$slug
+
 bin=$server_dir/server.sh
 service=$xdg_data/systemd/user/$slug-dev.service  # or $xdg_config, same tail
 unit=${service##*/}
@@ -121,16 +123,18 @@ done
 port=${FLASK_RUN_PORT:-5000}
 
 # Install and activate UFW firewall rules
-sudo tee /etc/ufw/applications.d/$slug <<-EOF
-	# Personal DDNS Server
-	# ${url}
-	[DDNSP Server]
-	title=Personal DDNS Server
-	description=Personal Dynamic DNS Server
-	ports=${port}/tcp
-EOF
-sudo ufw allow 'DDNSP Server'
-sudo ufw reload
+if ! [[ -f "$ufw_profile" ]]; then
+	sudo tee -- "$ufw_profile" <<-EOF
+		# Personal DDNS Server
+		# ${url}
+		[DDNSP Server]
+		title=Personal DDNS Server
+		description=Personal Dynamic DNS Server
+		ports=${port}/tcp
+	EOF
+	sudo ufw allow 'DDNSP Server'
+	sudo ufw reload
+fi
 
 # Systemd user service unit
 # https://wiki.archlinux.org/title/Systemd/User
@@ -156,7 +160,7 @@ systemctl --user restart "$unit"
 #sudo loginctl enable-linger "$USER"  # optional
 
 # Update Certbot keys / add deploy hook
-if [[ -d "$certbot_hook_dir" ]] && exists certbot; then
+if exists certbot && [[ -d "$certbot_hook_dir" ]] && ! [[ -f "$certbot_hook" ]]; then
 	cert_dir=$certbot_live_dir/$(
 		awk -F'= *' '/DNS_DOMAIN/{print $2; exit}' "$instance"/ddnsp.cfg |
 		tr -d "'\""
