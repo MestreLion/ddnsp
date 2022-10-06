@@ -65,9 +65,10 @@ usage() {
 	- Install needed dependency packages (may require 'sudo' privileges)
 	- Install and activate UFW Firewall rules
 	- Install and start systemd unit daemon
+	- Install certbot renew hook to update certificates and renew them
 
 	Options:
-	  -h|--help         - show this page.
+	  -h|--help - show this page.
 
 	Copyright (C) 2022 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
 	License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
@@ -144,7 +145,7 @@ systemctl --user restart "$unit"
 #sudo loginctl enable-linger "$USER"  # optional
 
 # Update Certbot keys / add deploy hook
-if [[ -d "$certbot_hook_dir" ]]; then
+if [[ -d "$certbot_hook_dir" ]] && exists certbot; then
 	cert_dir=$certbot_live_dir/$(
 		awk -F'= *' '/DNS_DOMAIN/{print $2; exit}' "$instance"/ddnsp.cfg |
 		tr -d "'\""
