@@ -17,6 +17,10 @@ bin=$server_dir/server.sh
 service=$xdg_data/systemd/user/$slug-dev.service  # or $xdg_config, same tail
 unit=${service##*/}
 
+certbot_live_dir=/etc/letsencrypt/live
+certbot_hook_dir=/etc/letsencrypt/renewal-hooks/post
+certbot_hook=$certbot_hook_dir/$slug-dev.sh
+
 # -----------------------------------------------------------------------------
 
 install_packages() {
@@ -140,6 +144,31 @@ systemctl --user restart "$unit"
 #sudo loginctl enable-linger "$USER"  # optional
 
 # Update Certbot keys / add deploy hook
-# ...
+if [[ -d "$certbot_hook_dir" ]]; then
+	cert_dir=$certbot_live_dir/$(
+		awk -F'= *' '/DNS_DOMAIN/{print $2; exit}' "$instance"/ddnsp.cfg |
+		tr -d "'\""
+	)
+	sudo tee -- "$certbot_hook" <<-EOF
+		#!/bin/bash
+		# This file is part of ddnsp, see <$url>
+		# Copyright (C) 2022 Rodrigo Silva (MestreLion) <linux@rodrigosilva.com>
+		# License: GPLv3 or later. See <http://www.gnu.org/licenses/gpl.html>
+		# ----------------------------------------------------------------------
+		# Copy certificates to DDNSP Development Server directory
+		cert_dir=$(escape "$cert_dir")
+		dest_dir=$(escape "$server_dir")
+		unit=$(escape "$unit")
+		user=$(escape "$USER")
+		xdg=\$(loginctl --property RuntimePath --value show-user "\$user")
+		if [[ -f "\$cert_dir"/fullchain.pem ]]; then
+		    cp -v -- "\$cert_dir"/{fullchain,privkey}.pem "\$dest_dir"
+		    sudo --user "\$user" XDG_RUNTIME_DIR="\$xdg" \\
+		        systemctl --user restart "\$unit"
+		fi
+	EOF
+	sudo chmod +x "$certbot_hook"
+	sudo certbot renew --force-renew
+fi
 
 message "Done!"
