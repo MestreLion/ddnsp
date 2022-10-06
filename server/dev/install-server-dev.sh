@@ -36,7 +36,7 @@ install_packages() {
 	local ok
 	for pkg in "$@"; do
 		# shellcheck disable=SC1083
-		ok=$(pkg-query --showformat=\${Version} --show "$pkg" 2>/dev/null || true)
+		ok=$(dpkg-query --showformat=\${Version} --show "$pkg" 2>/dev/null || true)
 		if [[ -z "$ok" ]]; then pkgs+=( "$pkg" ); fi
 	done
 	if (("${#pkgs[@]}")); then
