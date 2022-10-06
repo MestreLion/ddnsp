@@ -12,6 +12,7 @@ xdg_data=${XDG_DATA_HOME:-"$HOME"/.local/share}
 myself=${0##*/}
 here=$(dirname "$(readlink -f -- "$0")")
 server_dir=$(realpath --no-symlinks -- "$here"/..)
+instance=$server_dir/instance
 
 bin=$server_dir/server.sh
 service=$xdg_data/systemd/user/$slug-dev.service  # or $xdg_config, same tail
@@ -86,13 +87,12 @@ install_packages git
 
 # Create development config files from templates
 # .env
-config="$here"/../.env
+config=$server_dir/.env
 if ! [[ -f "$config" ]]; then
 	cp -- "$here"/env.template "$config"
 fi
 # instance/ddnsp.cfg
-instance="$here"/../instance
-config="$instance"/ddnsp.cfg
+config=$instance/ddnsp.cfg
 if ! [[ -f "$config" ]]; then
 	mkdir -p -- "$instance"
 	cp -- "$here"/ddnsp.cfg.template "$config"
@@ -100,8 +100,8 @@ fi
 
 # source configs
 configs=(
-	"$here"/../.flaskenv
-	"$here"/../.env
+	"$server_dir"/.flaskenv
+	"$server_dir"/.env
 )
 for config in "${configs[@]}"; do
 	# shellcheck source=server/.flaskenv
