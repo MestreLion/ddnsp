@@ -10,9 +10,10 @@ verbose=1
 
 xdg_data=${XDG_DATA_HOME:-"$HOME"/.local/share}
 myself=${0##*/}
-here=$(dirname "$(readlink -f "$0")")
+here=$(dirname "$(readlink -f -- "$0")")
+server_dir=$(realpath --no-symlinks -- "$here"/..)
 
-bin=$(realpath --no-symlinks "$here"/../server.sh)
+bin=$server_dir/server.sh
 service=$xdg_data/systemd/user/$slug-dev.service  # or $xdg_config, same tail
 unit=${service##*/}
 
@@ -134,8 +135,8 @@ cat > "$service" <<-EOF
 	WantedBy=default.target
 EOF
 systemctl --user daemon-reload
-systemctl --user enable "$unit"
-systemctl --user start  "$unit"
+systemctl --user enable  "$unit"
+systemctl --user restart "$unit"
 #sudo loginctl enable-linger "$USER"  # optional
 
 # Update Certbot keys / add deploy hook
