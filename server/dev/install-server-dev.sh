@@ -162,9 +162,11 @@ if [[ -d "$certbot_hook_dir" ]]; then
 		user=$(escape "$USER")
 		xdg=\$(loginctl --property RuntimePath --value show-user "\$user")
 		if [[ -f "\$cert_dir"/fullchain.pem ]]; then
+		    # Copy certificates
 		    cp -v -- "\$cert_dir"/{fullchain,privkey}.pem "\$dest_dir"
+		    # Restart service, fails if user not logged in and linger not enabled
 		    sudo --user "\$user" XDG_RUNTIME_DIR="\$xdg" \\
-		        systemctl --user restart "\$unit"
+		        systemctl --user restart "\$unit" || true
 		fi
 	EOF
 	sudo chmod +x "$certbot_hook"
